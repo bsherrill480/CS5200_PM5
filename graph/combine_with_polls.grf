@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Graph author="brian" created="Mon Nov 28 22:13:25 PST 2016" guiVersion="4.4.0.M2" id="1480408501828" licenseCode="Unlicensed" name="combine_with_polls" showComponentDetails="true">
+<Global>
+<Metadata id="Metadata2">
+<Record fieldDelimiter="|" name="Amount" recordDelimiter="\n" type="delimited">
+<Field name="field1" type="integer"/>
+</Record>
+</Metadata>
+<Metadata id="Metadata0" previewAttachment="${DATAIN_DIR}/poll_data.csv" previewAttachmentCharset="UTF-8">
+<Record fieldDelimiter="," label="poll_data.csv" name="poll_data_csv" previewAttachment="${DATAIN_DIR}/poll_data.csv" previewAttachmentCharset="UTF-8" recordDelimiter="\n" skipSourceRows="1" type="delimited">
+<Field format="yyyy-MM-dd" name="Date" type="date"/>
+<Field name="Pollster" type="string"/>
+<Field name="Sample" type="integer"/>
+<Field name="Weight" scale="2" type="decimal"/>
+<Field name="Leader" type="string"/>
+<Field eofAsDelimiter="true" name="Lead" type="integer"/>
+</Record>
+</Metadata>
+<Metadata id="Metadata4" previewAttachment="${DATAIN_DIR}/poll_data.csv" previewAttachmentCharset="UTF-8">
+<Record fieldDelimiter="," label="poll_data.csv" name="poll_data_csv" previewAttachment="${DATAIN_DIR}/poll_data.csv" previewAttachmentCharset="UTF-8" recordDelimiter="\n" skipSourceRows="1" type="delimited">
+<Field format="yyyy-MM-dd" name="Date" type="date"/>
+<Field name="Pollster" type="string"/>
+<Field name="Sample" type="integer"/>
+<Field name="Weight" scale="2" type="decimal"/>
+<Field name="Leader" type="string"/>
+<Field eofAsDelimiter="true" name="Lead" type="integer"/>
+</Record>
+</Metadata>
+<Metadata id="Metadata1" previewAttachment="${DATAIN_DIR}/poll_test.csv" previewAttachmentCharset="UTF-8">
+<Record fieldDelimiter="None &quot;null&quot;" label="poll_test.csv" name="poll_test_csv" previewAttachment="${DATAIN_DIR}/poll_test.csv" previewAttachmentCharset="UTF-8" quoteChar="both" quotedStrings="true" recordDelimiter="\n" skipSourceRows="1" type="delimited">
+<Field eofAsDelimiter="true" name="Query" type="string"/>
+</Record>
+</Metadata>
+<Metadata id="Metadata3" previewAttachment="${DATAIN_DIR}/poll_test.csv" previewAttachmentCharset="UTF-8">
+<Record fieldDelimiter="None &quot;null&quot;" label="poll_test.csv" name="poll_test_csv_1" previewAttachment="${DATAIN_DIR}/poll_test.csv" previewAttachmentCharset="UTF-8" quoteChar="both" quotedStrings="true" recordDelimiter="\n" skipSourceRows="1" type="delimited">
+<Field eofAsDelimiter="true" name="Query" type="string"/>
+</Record>
+</Metadata>
+<Connection database="MYSQL" dbURL="jdbc:mysql://localhost:3306/Geppetto" id="JDBC0" jdbcSpecific="MYSQL" name="Geppetto" password="dickslol" type="JDBC" user="root"/>
+<GraphParameters>
+<GraphParameterFile fileURL="workspace.prm"/>
+</GraphParameters>
+<Dictionary/>
+</Global>
+<Phase number="0">
+<Node dbConnection="JDBC0" guiName="Get Amount From Db" guiX="675" guiY="173" id="GET_AMOUNT_FROM_DB" printStatements="true" type="DB_INPUT_TABLE" url="port:$0.Query:discrete"/>
+<Node guiName="Reformat" guiX="318" guiY="173" id="REFORMAT" type="REFORMAT">
+<attr name="transform"><![CDATA[//#CTL2
+
+// Transforms input record into output record.
+function integer transform() {
+	$out.0.Query = "SELECT SUM(AMOUNT) AS Amount FROM Indivs16 WHERE `Date` >= \"" + date2str($in.0.Date, "yyyy-MM-dd") + "\" AND `Date` <= DATE_ADD(\"" + date2str($in.0.Date, "yyyy-MM-dd") + "\", INTERVAL 2 DAY);";
+
+	return ALL;
+}
+
+// Called during component initialization.
+// function boolean init() {}
+
+// Called during each graph run before the transform is executed. May be used to allocate and initialize resources
+// required by the transform. All resources allocated within this method should be released
+// by the postExecute() method.
+// function void preExecute() {}
+
+// Called only if transform() throws an exception.
+// function integer transformOnError(string errorMessage, string stackTrace) {}
+
+// Called during each graph run after the entire transform was executed. Should be used to free any resources
+// allocated within the preExecute() method.
+// function void postExecute() {}
+
+// Called to return a user-defined error message when an error occurs.
+// function string getMessage() {}
+]]></attr>
+</Node>
+<Node enabled="disabled" fileURL="${DATAIN_DIR}/poll_test.csv" guiName="Test Query" guiX="101" guiY="51" id="TEST_QUERY" type="DATA_READER"/>
+<Node guiName="Trash" guiX="990" guiY="173" id="TRASH" type="TRASH"/>
+<Node fileURL="${DATAIN_DIR}/poll_data.csv" guiName="UniversalDataReader" guiX="33" guiY="173" id="UNIVERSAL_DATA_READER" type="DATA_READER"/>
+<Edge debugMode="true" fromNode="GET_AMOUNT_FROM_DB:0" guiBendpoints="" guiRouter="Manhattan" id="Edge1" inPort="Port 0 (in)" metadata="Metadata2" outPort="Port 0 (out)" toNode="TRASH:0"/>
+<Edge debugMode="true" fromNode="REFORMAT:0" guiBendpoints="" guiRouter="Manhattan" id="Edge3" inPort="Port 0 (in)" metadata="Metadata3" outPort="Port 0 (out)" toNode="GET_AMOUNT_FROM_DB:0"/>
+<Edge fromNode="UNIVERSAL_DATA_READER:0" guiBendpoints="" guiRouter="Manhattan" id="Edge4" inPort="Port 0 (in)" metadata="Metadata4" outPort="Port 0 (output)" toNode="REFORMAT:0"/>
+</Phase>
+</Graph>
