@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Graph author="brian" created="Mon Nov 28 22:13:25 PST 2016" guiVersion="4.4.0.M2" id="1480408501828" licenseCode="Unlicensed" name="combine_with_polls" showComponentDetails="true">
+<Global>
+<Metadata id="Metadata0" previewAttachment="${DATAIN_DIR}/poll_data.csv" previewAttachmentCharset="UTF-8">
+<Record fieldDelimiter="," label="poll_data.csv" name="poll_data_csv" previewAttachment="${DATAIN_DIR}/poll_data.csv" previewAttachmentCharset="UTF-8" recordDelimiter="\n" skipSourceRows="1" type="delimited">
+<Field format="yyyy-MM-dd" name="Date" type="date"/>
+<Field name="Pollster" type="string"/>
+<Field name="Sample" type="integer"/>
+<Field name="Weight" scale="2" type="decimal"/>
+<Field name="Leader" type="string"/>
+<Field eofAsDelimiter="true" name="Lead" type="integer"/>
+</Record>
+</Metadata>
+<Metadata id="Metadata4" previewAttachment="${DATAIN_DIR}/poll_data.csv" previewAttachmentCharset="UTF-8">
+<Record fieldDelimiter="," label="poll_data.csv" name="poll_data_csv" previewAttachment="${DATAIN_DIR}/poll_data.csv" previewAttachmentCharset="UTF-8" recordDelimiter="\n" skipSourceRows="1" type="delimited">
+<Field format="yyyy-MM-dd" name="Date" type="date"/>
+<Field name="Pollster" type="string"/>
+<Field name="Sample" type="integer"/>
+<Field name="Weight" scale="2" type="decimal"/>
+<Field name="Leader" type="string"/>
+<Field eofAsDelimiter="true" name="Lead" type="integer"/>
+</Record>
+</Metadata>
+<Metadata id="Metadata1" previewAttachment="${DATAIN_DIR}/poll_test.csv" previewAttachmentCharset="UTF-8">
+<Record fieldDelimiter="None &quot;null&quot;" label="poll_test.csv" name="poll_test_csv" previewAttachment="${DATAIN_DIR}/poll_test.csv" previewAttachmentCharset="UTF-8" quoteChar="both" quotedStrings="true" recordDelimiter="\n" skipSourceRows="1" type="delimited">
+<Field eofAsDelimiter="true" name="Query" type="string"/>
+</Record>
+</Metadata>
+<Metadata id="Metadata3" previewAttachment="${DATAIN_DIR}/poll_test.csv" previewAttachmentCharset="UTF-8">
+<Record fieldDelimiter="None &quot;null&quot;" label="poll_test.csv" name="poll_test_csv_1" previewAttachment="${DATAIN_DIR}/poll_test.csv" previewAttachmentCharset="UTF-8" quoteChar="both" quotedStrings="true" recordDelimiter="\n" skipSourceRows="1" type="delimited">
+<Field eofAsDelimiter="true" name="Query" type="string"/>
+</Record>
+</Metadata>
+<Metadata id="Metadata2" previewAttachmentCharset="UTF-8">
+<Record fieldDelimiter="|" name="sql_return" previewAttachmentCharset="UTF-8" recordDelimiter="\n" type="delimited">
+<Field name="Pollster" type="string"/>
+<Field name="Date" type="string"/>
+<Field name="Amount" type="integer"/>
+<Field name="Candidate" type="string"/>
+</Record>
+</Metadata>
+<Connection database="MYSQL" dbURL="jdbc:mysql://localhost:3306/Geppetto" id="JDBC0" jdbcSpecific="MYSQL" name="Geppetto" password="dickslol" type="JDBC" user="root"/>
+<GraphParameters>
+<GraphParameterFile fileURL="workspace.prm"/>
+</GraphParameters>
+<Dictionary/>
+</Global>
+<Phase number="0">
+<Node guiName="Convert to SQL" guiX="318" guiY="173" id="CONVERT_TO_SQL" type="REFORMAT">
+<attr name="transform"><![CDATA[//#CTL2
+
+// Transforms input record into output record.
+function integer transform() {
+	string dStr = date2str($in.0.Date, "yyyy-MM-dd");
+	$out.0.Query = "SELECT \"" + $in.0.Pollster + "\", DATE(`Date`), SUM(Amount), IF(RecipId=\"N00000019\", \"Clinton\", \"Sanders\") " + 
+	"FROM Indivs16 " +
+	"WHERE `Date` >= DATE_SUB(\"" + dStr + "\", INTERVAL 7 DAY) " +
+	"AND `Date` <= DATE_ADD(\"" + dStr + "\", INTERVAL 7 DAY) " +
+	"AND (RecipId = \"N00000019\" OR RecipId = \"N00000528\") " +
+	"GROUP BY `Date`, RecipId " +
+	"ORDER BY `Date` ASC;";
+
+	return ALL;
+}
+
+// Called during component initialization.
+// function boolean init() {}
+
+// Called during each graph run before the transform is executed. May be used to allocate and initialize resources
+// required by the transform. All resources allocated within this method should be released
+// by the postExecute() method.
+// function void preExecute() {}
+
+// Called only if transform() throws an exception.
+// function integer transformOnError(string errorMessage, string stackTrace) {}
+
+// Called during each graph run after the entire transform was executed. Should be used to free any resources
+// allocated within the preExecute() method.
+// function void postExecute() {}
+
+// Called to return a user-defined error message when an error occurs.
+// function string getMessage() {}
+]]></attr>
+</Node>
+<Node dbConnection="JDBC0" guiName="Get Amount From Db" guiX="675" guiY="173" id="GET_AMOUNT_FROM_DB" printStatements="true" type="DB_INPUT_TABLE" url="port:$0.Query:discrete"/>
+<Node fileURL="${DATAIN_DIR}/poll_data.csv" guiName="Poll Data" guiX="33" guiY="173" id="POLL_DATA" type="DATA_READER"/>
+<Node enabled="disabled" guiName="Trash" guiX="990" guiY="173" id="TRASH" type="TRASH"/>
+<Node fileURL="${DATAOUT_DIR}/poll_result/#.csv" guiName="UniversalDataWriter" guiX="1049" guiY="313" id="UNIVERSAL_DATA_WRITER" partitionFileTag="keyNameFileTag" partitionKey="Pollster" type="DATA_WRITER"/>
+<Edge debugMode="true" fromNode="CONVERT_TO_SQL:0" guiBendpoints="" guiRouter="Manhattan" id="Edge3" inPort="Port 0 (in)" metadata="Metadata3" outPort="Port 0 (out)" toNode="GET_AMOUNT_FROM_DB:0"/>
+<Edge debugMode="true" fromNode="GET_AMOUNT_FROM_DB:0" guiBendpoints="" guiRouter="Manhattan" id="Edge1" inPort="Port 0 (in)" metadata="Metadata2" outPort="Port 0 (out)" toNode="UNIVERSAL_DATA_WRITER:0"/>
+<Edge fromNode="POLL_DATA:0" guiBendpoints="" guiRouter="Manhattan" id="Edge4" inPort="Port 0 (in)" metadata="Metadata4" outPort="Port 0 (output)" toNode="CONVERT_TO_SQL:0"/>
+</Phase>
+</Graph>
