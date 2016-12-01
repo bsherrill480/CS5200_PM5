@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Graph author="brian" created="Mon Nov 28 22:13:25 PST 2016" guiVersion="4.4.0.M2" id="1480408501828" licenseCode="Unlicensed" name="combine_with_polls" showComponentDetails="true">
+<Global>
+<Metadata id="Metadata5" previewAttachment="${DATAIN_DIR}/hillary_endorsements.csv" previewAttachmentCharset="UTF-8">
+<Record fieldDelimiter="," label="hillary_endorsements.csv" name="hillary_endorsements_csv" previewAttachment="${DATAIN_DIR}/hillary_endorsements.csv" previewAttachmentCharset="UTF-8" recordDelimiter="\n" skipSourceRows="1" type="delimited">
+<Field name="Endorser" type="string"/>
+<Field eofAsDelimiter="true" format="mm-dd-yyyy" name="Date" type="date"/>
+</Record>
+</Metadata>
+<Metadata id="Metadata0" previewAttachment="${DATAIN_DIR}/poll_data.csv" previewAttachmentCharset="UTF-8">
+<Record fieldDelimiter="," label="poll_data.csv" name="poll_data_csv" previewAttachment="${DATAIN_DIR}/poll_data.csv" previewAttachmentCharset="UTF-8" recordDelimiter="\n" skipSourceRows="1" type="delimited">
+<Field format="yyyy-MM-dd" name="Date" type="date"/>
+<Field name="Pollster" type="string"/>
+<Field name="Sample" type="integer"/>
+<Field name="Weight" scale="2" type="decimal"/>
+<Field name="Leader" type="string"/>
+<Field eofAsDelimiter="true" name="Lead" type="integer"/>
+</Record>
+</Metadata>
+<Metadata id="Metadata4" previewAttachment="${DATAIN_DIR}/poll_data.csv" previewAttachmentCharset="UTF-8">
+<Record fieldDelimiter="," label="poll_data.csv" name="poll_data_csv" previewAttachment="${DATAIN_DIR}/poll_data.csv" previewAttachmentCharset="UTF-8" recordDelimiter="\n" skipSourceRows="1" type="delimited">
+<Field format="yyyy-MM-dd" name="Date" type="date"/>
+<Field name="Pollster" type="string"/>
+<Field name="Sample" type="integer"/>
+<Field name="Weight" scale="2" type="decimal"/>
+<Field name="Leader" type="string"/>
+<Field eofAsDelimiter="true" name="Lead" type="integer"/>
+</Record>
+</Metadata>
+<Metadata id="Metadata1" previewAttachment="${DATAIN_DIR}/poll_test.csv" previewAttachmentCharset="UTF-8">
+<Record fieldDelimiter="None &quot;null&quot;" label="poll_test.csv" name="poll_test_csv" previewAttachment="${DATAIN_DIR}/poll_test.csv" previewAttachmentCharset="UTF-8" quoteChar="both" quotedStrings="true" recordDelimiter="\n" skipSourceRows="1" type="delimited">
+<Field eofAsDelimiter="true" name="Query" type="string"/>
+</Record>
+</Metadata>
+<Metadata id="Metadata3" previewAttachment="${DATAIN_DIR}/poll_test.csv" previewAttachmentCharset="UTF-8">
+<Record fieldDelimiter="None &quot;null&quot;" label="poll_test.csv" name="poll_test_csv_1" previewAttachment="${DATAIN_DIR}/poll_test.csv" previewAttachmentCharset="UTF-8" quoteChar="both" quotedStrings="true" recordDelimiter="\n" skipSourceRows="1" type="delimited">
+<Field eofAsDelimiter="true" name="Query" type="string"/>
+</Record>
+</Metadata>
+<Metadata id="Metadata2" previewAttachmentCharset="UTF-8">
+<Record fieldDelimiter="|" name="sql_return" previewAttachmentCharset="UTF-8" recordDelimiter="\n" type="delimited">
+<Field name="Pollster" type="string"/>
+<Field name="Date" type="string"/>
+<Field name="Amount" type="integer"/>
+</Record>
+</Metadata>
+<Connection database="MYSQL" dbURL="jdbc:mysql://localhost:3306/Geppetto" id="JDBC0" jdbcSpecific="MYSQL" name="Geppetto" password="dickslol" type="JDBC" user="root"/>
+<GraphParameters>
+<GraphParameterFile fileURL="workspace.prm"/>
+</GraphParameters>
+<Dictionary/>
+</Global>
+<Phase number="0">
+<Node guiName="Convert to SQL" guiX="433" guiY="167" id="CONVERT_TO_SQL" type="REFORMAT">
+<attr name="transform"><![CDATA[//#CTL2
+
+// Transforms input record into output record.
+function integer transform() {
+	string dStr = date2str($in.0.Date, "yyyy-mm-dd");
+	$out.0.Query = "SELECT \"" + $in.0.Endorser + "\", DATE(`Date`), SUM(Amount) " + 
+	"FROM PACsToCand16 " +
+	"WHERE `Date` >= DATE_SUB(\"" + dStr + "\", INTERVAL 7 DAY) " +
+	"AND `Date` <= DATE_ADD(\"" + dStr + "\", INTERVAL 7 DAY) " +
+	"AND CID = \"N00000019\" " +
+	"GROUP BY `Date` " +
+	"ORDER BY `Date` ASC;";
+
+	return ALL;
+}
+
+// Called during component initialization.
+// function boolean init() {}
+
+// Called during each graph run before the transform is executed. May be used to allocate and initialize resources
+// required by the transform. All resources allocated within this method should be released
+// by the postExecute() method.
+// function void preExecute() {}
+
+// Called only if transform() throws an exception.
+// function integer transformOnError(string errorMessage, string stackTrace) {}
+
+// Called during each graph run after the entire transform was executed. Should be used to free any resources
+// allocated within the preExecute() method.
+// function void postExecute() {}
+
+// Called to return a user-defined error message when an error occurs.
+// function string getMessage() {}
+]]></attr>
+</Node>
+<Node guiName="ExtFilter" guiX="214" guiY="167" id="EXT_FILTER" type="EXT_FILTER">
+<attr name="guiDescription"><![CDATA[Filter Non 2016]]></attr>
+<attr name="filterExpression"><![CDATA[//#CTL2
+getYear($in.0.Date) == 2016]]></attr>
+</Node>
+<Node dbConnection="JDBC0" guiName="Get Amount From Db" guiX="675" guiY="161" id="GET_AMOUNT_FROM_DB" printStatements="true" type="DB_INPUT_TABLE" url="port:$0.Query:discrete"/>
+<Node fileURL="${DATAIN_DIR}/hillary_endorsements_all.csv" guiName="Poll Data" guiX="1" guiY="167" id="POLL_DATA" type="DATA_READER"/>
+<Node enabled="disabled" guiName="Trash" guiX="362" guiY="361" id="TRASH" type="TRASH"/>
+<Node fileURL="${DATAOUT_DIR}/clinton_endorsements_pac/#.csv" guiName="UniversalDataWriter" guiX="1049" guiY="313" id="UNIVERSAL_DATA_WRITER" partitionFileTag="keyNameFileTag" partitionKey="Pollster" type="DATA_WRITER"/>
+<Edge debugMode="true" fromNode="CONVERT_TO_SQL:0" guiBendpoints="" guiRouter="Manhattan" id="Edge3" inPort="Port 0 (in)" metadata="Metadata3" outPort="Port 0 (out)" toNode="GET_AMOUNT_FROM_DB:0"/>
+<Edge debugMode="true" fromNode="EXT_FILTER:0" guiBendpoints="" guiRouter="Manhattan" id="Edge0" inPort="Port 0 (in)" outPort="Port 0 (accepted)" toNode="CONVERT_TO_SQL:0"/>
+<Edge debugMode="true" fromNode="GET_AMOUNT_FROM_DB:0" guiBendpoints="" guiRouter="Manhattan" id="Edge1" inPort="Port 0 (in)" metadata="Metadata2" outPort="Port 0 (out)" toNode="UNIVERSAL_DATA_WRITER:0"/>
+<Edge debugMode="true" fromNode="POLL_DATA:0" guiBendpoints="" guiRouter="Manhattan" id="Edge4" inPort="Port 0 (in)" metadata="Metadata5" outPort="Port 0 (output)" toNode="EXT_FILTER:0"/>
+</Phase>
+</Graph>

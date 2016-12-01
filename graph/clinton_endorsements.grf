@@ -56,7 +56,7 @@
 
 // Transforms input record into output record.
 function integer transform() {
-	string dStr = date2str($in.0.Date, "yyyy-MM-dd");
+	string dStr = date2str($in.0.Date, "yyyy-mm-dd");
 	$out.0.Query = "SELECT \"" + $in.0.Endorser + "\", DATE(`Date`), SUM(Amount) " + 
 	"FROM Indivs16 " +
 	"WHERE `Date` >= DATE_SUB(\"" + dStr + "\", INTERVAL 7 DAY) " +
